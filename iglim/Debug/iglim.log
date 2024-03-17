@@ -1,0 +1,4 @@
+﻿  iglimDlg.cpp
+iglimDlg.obj : warning LNK4258: directive '/entry:WinMainCRTStartup' not compatible with switch '/ENTRY:wWinMainCRTStartup'; ignored
+  iglim.vcxproj -> C:\Users\admin\Documents\GitHub\iglim\Debug\iglim.exe
+  iglim.vcxproj -> C:\Users\admin\Documents\GitHub\iglim\Debug\iglim.pdb (Partial PDB)
