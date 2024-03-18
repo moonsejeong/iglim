@@ -6,6 +6,8 @@
 #include "iglim.h"
 #include "iglimDlg.h"
 #include "afxdialogex.h"
+#include <iostream>
+#include <vector>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -105,6 +107,15 @@ BOOL CiglimDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	MoveWindow(0, 0, 1600, 840);
 	GetDlgItem(IDC_BTN_RESET)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_TOPLEFT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_TOP)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_TOPRIGHT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_LEFT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_RIGHT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_BOTTOMLEFT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_BOTTOM)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_BOTTOMRIGHT)->EnableWindow(false);
+	GetDlgItem(IDC_EDIT_DISTANCE)->EnableWindow(false);
 
 	InitImg();
 
@@ -154,7 +165,7 @@ void CiglimDlg::InitImg()
 	int nHeight = HEIGHT;
 	int nBpp = BPP;
 
-	m_pImg.Create(nWidth, -nHeight, nBpp);
+	m_pImg.Create(nWidth, nHeight, nBpp);
 	if (nBpp == 8) {
 		static RGBQUAD rgb[256];
 		for (int i = 0; i < 256; i++)
@@ -165,20 +176,37 @@ void CiglimDlg::InitImg()
 	int nPitch = m_pImg.GetPitch();
 	unsigned char* fm = (unsigned char*)m_pImg.GetBits();
 
-	memset(fm, 0xff, nWidth * nHeight);
+	for (int j = 0; j < HEIGHT; j++) {
+		for (int i = 0; i < WIDTH; i++) {
+			fm[j * nPitch + i] = 0xff;
+		}
+	}
 }
 
 void CiglimDlg::OnBnClickedBtnCreate()
 {
-	// TODO: Add your control notification handler code here
 		int nXpos = GetDlgItemInt(IDC_EDIT_XPOS);
 		int nYpos = GetDlgItemInt(IDC_EDIT_YPOS);
 		int nRadius = GetDlgItemInt(IDC_EDIT_RADIUS);
+		if (nXpos == NULL || nYpos == NULL || nRadius == NULL) {
+			AfxMessageBox(_T("Fill In All Blanks"));
+			return;
+		}
 		if (nXpos + nRadius * 2 > WIDTH || nYpos + nRadius * 2 > HEIGHT) {
-			AfxMessageBox(_T("Out Of Range"), MB_ICONERROR);
+			AfxMessageBox(_T("Out Of Range"));
 			return;
 		}
 		GetDlgItem(IDC_BTN_RESET)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_TOPLEFT)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_TOP)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_TOPRIGHT)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_LEFT)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_RIGHT)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_BOTTOMLEFT)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_BOTTOM)->EnableWindow(true);
+		GetDlgItem(IDC_BTN_BOTTOMRIGHT)->EnableWindow(true);
+		GetDlgItem(IDC_EDIT_DISTANCE)->EnableWindow(true);
+
 		GetDlgItem(IDC_BTN_CREATE)->EnableWindow(false);
 		GetDlgItem(IDC_EDIT_XPOS)->EnableWindow(false);
 		GetDlgItem(IDC_EDIT_YPOS)->EnableWindow(false);
@@ -214,7 +242,7 @@ bool CiglimDlg::isCircle(int i, int j, int nCenterX, int nCenterY, int nRadius)
 	double dY = j - nCenterY;
 	double dDist = dX * dX + dY * dY;
 
-	if (dDist < nRadius * nRadius/* && dDist > (radious - 1) * (radious - 1)*/) {
+	if (dDist < nRadius * nRadius) {
 		bRet = true;
 	}
 
@@ -224,11 +252,22 @@ bool CiglimDlg::isCircle(int i, int j, int nCenterX, int nCenterY, int nRadius)
 
 void CiglimDlg::OnBnClickedBtnReset()
 {
-	// TODO: Add your control notification handler code here
 	m_pImg.Destroy();
 	InitImg();
 
 	GetDlgItem(IDC_BTN_RESET)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_RESET)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_TOPLEFT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_TOP)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_TOPRIGHT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_LEFT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_RIGHT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_BOTTOMLEFT)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_BOTTOM)->EnableWindow(false);
+	GetDlgItem(IDC_BTN_BOTTOMRIGHT)->EnableWindow(false);
+	GetDlgItem(IDC_EDIT_DISTANCE)->SetWindowTextW(_T(""));
+	GetDlgItem(IDC_EDIT_DISTANCE)->EnableWindow(false);
+
 	GetDlgItem(IDC_BTN_CREATE)->EnableWindow(true);
 	GetDlgItem(IDC_EDIT_XPOS)->EnableWindow(true);
 	GetDlgItem(IDC_EDIT_YPOS)->EnableWindow(true);
@@ -237,19 +276,61 @@ void CiglimDlg::OnBnClickedBtnReset()
 	Invalidate();
 }
 
+std::vector<int> GetCenter(int nPitch, unsigned char* fm)
+{
+	std::vector<int> vPoint{};
+	int nSumX = 0;
+	int nSumY = 0;
+	int nCount = 0;
+
+	CRect rect(0, 0, WIDTH, HEIGHT);
+	for (int j = rect.top; j < rect.bottom; j++) {
+		for (int i = rect.left; i < rect.right; i++) {
+			if (fm[j * nPitch + i] == 0x00) {
+				nSumX += i;
+				nSumY += j;
+				nCount++;
+			}
+		}
+	}
+	
+	int nCenterX = nSumX / nCount;
+	int nCenterY = nSumY / nCount;
+
+	vPoint.push_back(nCenterX);
+	vPoint.push_back(nCenterY);
+
+	return vPoint;
+}
+
 void CiglimDlg::OnBnClickedBtnTopleft()
 {
-	// TODO: Add your control notification handler code here
-	int nXpos = GetDlgItemInt(IDC_EDIT_XPOS);
-	int nYpos = GetDlgItemInt(IDC_EDIT_YPOS);
 	int nRadius = GetDlgItemInt(IDC_EDIT_RADIUS);
-
+	int nDistance = GetDlgItemInt(IDC_EDIT_DISTANCE);
+	if (nDistance == NULL) {
+		AfxMessageBox(_T("Fill In Distance"));
+		return;
+	}
+	
+	int nPitch = m_pImg.GetPitch();
 	unsigned char* fm = (unsigned char*)m_pImg.GetBits();
-	for (int i = 0; i < 20; i++) {
-		drawCircle(fm, nXpos--, nYpos--, nRadius, 0xff);
-		drawCircle(fm, nXpos, nYpos, nRadius, 0x00);
-		CClientDC dc(this);
-		m_pImg.Draw(dc, 0, 0);
-		Sleep(10);
+
+	std::vector<int> vCenter = GetCenter(nPitch, fm);
+
+	int nStartX = vCenter[0] - nRadius;
+	int nStartY = vCenter[1] - nRadius;
+	
+	for (int i = 0; i < nDistance; i++) {
+		if (nStartX == 0 || nStartY == 0) {
+			AfxMessageBox(_T("Can't Escape From Area"));
+			break;
+		}
+		else {
+			drawCircle(fm, nStartX--, nStartY--, nRadius, 0xff);
+			drawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			CClientDC dc(this);
+			m_pImg.Draw(dc, 0, 0);
+			Sleep(10);
+		}
 	}
 }
