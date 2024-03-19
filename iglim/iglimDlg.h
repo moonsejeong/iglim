@@ -42,6 +42,7 @@ private:
 	void InitImg();
 	void UpdateImg();
 	bool BeforeMove();
+	void SaveImg();
 	std::vector<int> GetCenter(unsigned char* fm);
 
 	void DrawCircle(unsigned char* fm, int x, int y, int nRadius, int color);
@@ -50,7 +51,7 @@ private:
 
 public:
 	afx_msg void OnBnClickedBtnCreate();
-	afx_msg void OnBnClickedBtnReset();
+	afx_msg void OnBnClickedBtnRemove();
 
 	afx_msg void OnBnClickedBtnTopleft();
 	afx_msg void OnBnClickedBtnTop();
@@ -60,6 +61,7 @@ public:
 	afx_msg void OnBnClickedBtnBottomleft();
 	afx_msg void OnBnClickedBtnBottom();
 	afx_msg void OnBnClickedBtnBottomright();
-	afx_msg void OnBnClickedBtnLoad();
 
+	afx_msg void OnNMDblclkList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedBtnQuit();
 };

@@ -181,6 +181,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DlgImg.h" />
     <ClInclude Include="iglim.h" />
     <ClInclude Include="iglimDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DlgImg.cpp" />
     <ClCompile Include="iglim.cpp" />
     <ClCompile Include="iglimDlg.cpp" />
     <ClCompile Include="stdafx.cpp">

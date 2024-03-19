@@ -6,6 +6,7 @@
 #include "iglim.h"
 #include "iglimDlg.h"
 #include "afxdialogex.h"
+#include "DlgImg.h"
 #include <iostream>
 #include <vector>
 
@@ -69,7 +70,7 @@ BEGIN_MESSAGE_MAP(CiglimDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_CREATE, &CiglimDlg::OnBnClickedBtnCreate)
-	ON_BN_CLICKED(IDC_BTN_RESET, &CiglimDlg::OnBnClickedBtnReset)
+	ON_BN_CLICKED(IDC_BTN_REMOVE, &CiglimDlg::OnBnClickedBtnRemove)
 	ON_BN_CLICKED(IDC_BTN_TOPLEFT, &CiglimDlg::OnBnClickedBtnTopleft)
 	ON_BN_CLICKED(IDC_BTN_TOP, &CiglimDlg::OnBnClickedBtnTop)
 	ON_BN_CLICKED(IDC_BTN_TOPRIGHT, &CiglimDlg::OnBnClickedBtnTopright)
@@ -78,7 +79,8 @@ BEGIN_MESSAGE_MAP(CiglimDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_BOTTOMLEFT, &CiglimDlg::OnBnClickedBtnBottomleft)
 	ON_BN_CLICKED(IDC_BTN_BOTTOM, &CiglimDlg::OnBnClickedBtnBottom)
 	ON_BN_CLICKED(IDC_BTN_BOTTOMRIGHT, &CiglimDlg::OnBnClickedBtnBottomright)
-	ON_BN_CLICKED(IDC_BTN_LOAD, &CiglimDlg::OnBnClickedBtnLoad)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST, &CiglimDlg::OnNMDblclkList)
+	ON_BN_CLICKED(IDC_BTN_QUIT, &CiglimDlg::OnBnClickedBtnQuit)
 END_MESSAGE_MAP()
 
 
@@ -269,7 +271,7 @@ bool CiglimDlg::IsCircle(int i, int j, int nCenterX, int nCenterY, int nRadius)
 }
 
 
-void CiglimDlg::OnBnClickedBtnReset()
+void CiglimDlg::OnBnClickedBtnRemove()
 {
 	m_pImg.Destroy();
 	InitImg();
@@ -333,6 +335,19 @@ std::vector<int> CiglimDlg::GetCenter(unsigned char* fm)
 	vPoint.push_back(nCenterY);
 
 	return vPoint;
+}
+
+void CiglimDlg::SaveImg()
+{
+	CString strFileName;
+	strFileName.Format(_T("%02d.bmp"), m_nNum);
+
+	CString strFilePath;
+	strFilePath.Format(_T("C:\\image\\%s"), strFileName);
+
+	m_pImg.Save(strFilePath);
+	m_List.InsertItem(0, strFileName, 0);
+	m_nNum++;
 }
 
 void CiglimDlg::MoveCircle(int direction)
@@ -432,15 +447,7 @@ void CiglimDlg::MoveCircle(int direction)
 		}
 	}
 
-	CString strFileName;
-	strFileName.Format(_T("%02d.bmp"), m_nNum);
-
-	CString strFilePath;
-	strFilePath.Format(_T("C:\\image\\%s"), strFileName);
-
-	m_pImg.Save(strFilePath);
-	m_List.InsertItem(0, strFileName, 0);
-	m_nNum++;
+	SaveImg();
 }
 
 void CiglimDlg::OnBnClickedBtnTopleft()
@@ -483,13 +490,29 @@ void CiglimDlg::OnBnClickedBtnBottomright()
 	MoveCircle(8);
 }
 
-void CiglimDlg::OnBnClickedBtnLoad()
+void CiglimDlg::OnNMDblclkList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	if (pNMItemActivate->iItem != -1) {
+		CString strFileName = m_List.GetItemText(pNMItemActivate->iItem, 0);
+		CString strFilePath;
+		strFilePath.Format(_T("C:\\image\\%s"), strFileName);
+
+		CDlgImg dig;
+		dig.m_strFilePath = strFilePath;
+		dig.DoModal();
+	}
+
+	*pResult = 0;
+}
+
+
+void CiglimDlg::OnBnClickedBtnQuit()
 {
 	// TODO: Add your control notification handler code here
-	CString str = _T("∫Ò∆Æ∏  ∆ƒ¿œ(*.bmp)|*.bmp|");
-	CFileDialog dlg(TRUE, _T("*.dat"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, str, this);
-
-	if (dlg.DoModal() == IDOK)
+	if (AfxMessageBox(_T("Are you sure to quit?"), MB_OKCANCEL) == IDOK)
 	{
+		PostQuitMessage(0);
 	}
 }
