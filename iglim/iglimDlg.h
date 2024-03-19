@@ -4,6 +4,7 @@
 
 #pragma once
 #include <vector>
+#include "afxcmn.h"
 
 
 // CiglimDlg dialog
@@ -14,6 +15,8 @@ public:
 	CiglimDlg(CWnd* pParent = NULL);	// standard constructor
 
 	CImage m_pImg;
+	CListCtrl m_List;
+	int m_nNum = 0;
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -57,4 +60,6 @@ public:
 	afx_msg void OnBnClickedBtnBottomleft();
 	afx_msg void OnBnClickedBtnBottom();
 	afx_msg void OnBnClickedBtnBottomright();
+	afx_msg void OnBnClickedBtnLoad();
+
 };

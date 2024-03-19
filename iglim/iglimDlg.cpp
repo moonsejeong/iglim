@@ -61,6 +61,7 @@ CiglimDlg::CiglimDlg(CWnd* pParent /*=NULL*/)
 void CiglimDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST, m_List);
 }
 
 BEGIN_MESSAGE_MAP(CiglimDlg, CDialogEx)
@@ -77,6 +78,7 @@ BEGIN_MESSAGE_MAP(CiglimDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_BOTTOMLEFT, &CiglimDlg::OnBnClickedBtnBottomleft)
 	ON_BN_CLICKED(IDC_BTN_BOTTOM, &CiglimDlg::OnBnClickedBtnBottom)
 	ON_BN_CLICKED(IDC_BTN_BOTTOMRIGHT, &CiglimDlg::OnBnClickedBtnBottomright)
+	ON_BN_CLICKED(IDC_BTN_LOAD, &CiglimDlg::OnBnClickedBtnLoad)
 END_MESSAGE_MAP()
 
 
@@ -429,6 +431,16 @@ void CiglimDlg::MoveCircle(int direction)
 			UpdateImg();
 		}
 	}
+
+	CString strFileName;
+	strFileName.Format(_T("%02d.bmp"), m_nNum);
+
+	CString strFilePath;
+	strFilePath.Format(_T("C:\\image\\%s"), strFileName);
+
+	m_pImg.Save(strFilePath);
+	m_List.InsertItem(0, strFileName, 0);
+	m_nNum++;
 }
 
 void CiglimDlg::OnBnClickedBtnTopleft()
@@ -441,38 +453,43 @@ void CiglimDlg::OnBnClickedBtnTop()
 	MoveCircle(2);
 }
 
-
 void CiglimDlg::OnBnClickedBtnTopright()
 {
 	MoveCircle(3);
 }
-
 
 void CiglimDlg::OnBnClickedBtnLeft()
 {
 	MoveCircle(4);
 }
 
-
 void CiglimDlg::OnBnClickedBtnRight()
 {
 	MoveCircle(5);
 }
-
 
 void CiglimDlg::OnBnClickedBtnBottomleft()
 {
 	MoveCircle(6);
 }
 
-
 void CiglimDlg::OnBnClickedBtnBottom()
 {
 	MoveCircle(7);
 }
 
-
 void CiglimDlg::OnBnClickedBtnBottomright()
 {
 	MoveCircle(8);
+}
+
+void CiglimDlg::OnBnClickedBtnLoad()
+{
+	// TODO: Add your control notification handler code here
+	CString str = _T("∫Ò∆Æ∏  ∆ƒ¿œ(*.bmp)|*.bmp|");
+	CFileDialog dlg(TRUE, _T("*.dat"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, str, this);
+
+	if (dlg.DoModal() == IDOK)
+	{
+	}
 }
