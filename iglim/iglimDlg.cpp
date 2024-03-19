@@ -70,6 +70,13 @@ BEGIN_MESSAGE_MAP(CiglimDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CREATE, &CiglimDlg::OnBnClickedBtnCreate)
 	ON_BN_CLICKED(IDC_BTN_RESET, &CiglimDlg::OnBnClickedBtnReset)
 	ON_BN_CLICKED(IDC_BTN_TOPLEFT, &CiglimDlg::OnBnClickedBtnTopleft)
+	ON_BN_CLICKED(IDC_BTN_TOP, &CiglimDlg::OnBnClickedBtnTop)
+	ON_BN_CLICKED(IDC_BTN_TOPRIGHT, &CiglimDlg::OnBnClickedBtnTopright)
+	ON_BN_CLICKED(IDC_BTN_LEFT, &CiglimDlg::OnBnClickedBtnLeft)
+	ON_BN_CLICKED(IDC_BTN_RIGHT, &CiglimDlg::OnBnClickedBtnRight)
+	ON_BN_CLICKED(IDC_BTN_BOTTOMLEFT, &CiglimDlg::OnBnClickedBtnBottomleft)
+	ON_BN_CLICKED(IDC_BTN_BOTTOM, &CiglimDlg::OnBnClickedBtnBottom)
+	ON_BN_CLICKED(IDC_BTN_BOTTOMRIGHT, &CiglimDlg::OnBnClickedBtnBottomright)
 END_MESSAGE_MAP()
 
 
@@ -106,6 +113,9 @@ BOOL CiglimDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	MoveWindow(0, 0, 1600, 840);
+	GetDlgItem(IDC_EDIT_XPOS)->SetWindowTextW(_T("0"));
+	GetDlgItem(IDC_EDIT_YPOS)->SetWindowTextW(_T("0"));
+	GetDlgItem(IDC_EDIT_RADIUS)->SetWindowTextW(_T("0"));
 	GetDlgItem(IDC_BTN_RESET)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_TOPLEFT)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_TOP)->EnableWindow(false);
@@ -183,19 +193,27 @@ void CiglimDlg::InitImg()
 	}
 }
 
+void CiglimDlg::UpdateImg()
+{
+	CClientDC dc(this);
+	m_pImg.Draw(dc, 0, 0);
+	Sleep(0);
+}
+
 void CiglimDlg::OnBnClickedBtnCreate()
 {
 		int nXpos = GetDlgItemInt(IDC_EDIT_XPOS);
 		int nYpos = GetDlgItemInt(IDC_EDIT_YPOS);
 		int nRadius = GetDlgItemInt(IDC_EDIT_RADIUS);
-		if (nXpos == NULL || nYpos == NULL || nRadius == NULL) {
-			AfxMessageBox(_T("Fill In All Blanks"));
+		if (nRadius == NULL) {
+			AfxMessageBox(_T("Fill In Radius"));
 			return;
 		}
 		if (nXpos + nRadius * 2 > WIDTH || nYpos + nRadius * 2 > HEIGHT) {
 			AfxMessageBox(_T("Out Of Range"));
 			return;
 		}
+
 		GetDlgItem(IDC_BTN_RESET)->EnableWindow(true);
 		GetDlgItem(IDC_BTN_TOPLEFT)->EnableWindow(true);
 		GetDlgItem(IDC_BTN_TOP)->EnableWindow(true);
@@ -215,12 +233,12 @@ void CiglimDlg::OnBnClickedBtnCreate()
 		int nPitch = m_pImg.GetPitch();
 		unsigned char* fm = (unsigned char*)m_pImg.GetBits();
 
-		drawCircle(fm, nXpos, nYpos, nRadius, 0x00);
+		DrawCircle(fm, nXpos, nYpos, nRadius, 0x00);
 
 		Invalidate();
 }
 
-void CiglimDlg::drawCircle(unsigned char* fm, int x, int y, int nRadius, int color)
+void CiglimDlg::DrawCircle(unsigned char* fm, int x, int y, int nRadius, int color)
 {
 	int nCenterX = x + nRadius;
 	int nCenterY = y + nRadius;
@@ -228,13 +246,13 @@ void CiglimDlg::drawCircle(unsigned char* fm, int x, int y, int nRadius, int col
 
 	for (int j = y; j < y + nRadius * 2; j++) {
 		for (int i = x; i < x + nRadius * 2; i++) {
-			if (isCircle(i, j, nCenterX, nCenterY, nRadius))
+			if (IsCircle(i, j, nCenterX, nCenterY, nRadius))
 				fm[j * nPitch + i] = color;
 		}
 	}
 }
 
-bool CiglimDlg::isCircle(int i, int j, int nCenterX, int nCenterY, int nRadius)
+bool CiglimDlg::IsCircle(int i, int j, int nCenterX, int nCenterY, int nRadius)
 {
 	bool bRet = false;
 
@@ -242,9 +260,8 @@ bool CiglimDlg::isCircle(int i, int j, int nCenterX, int nCenterY, int nRadius)
 	double dY = j - nCenterY;
 	double dDist = dX * dX + dY * dY;
 
-	if (dDist < nRadius * nRadius) {
+	if (dDist < nRadius * nRadius)
 		bRet = true;
-	}
 
 	return bRet;
 }
@@ -276,9 +293,22 @@ void CiglimDlg::OnBnClickedBtnReset()
 	Invalidate();
 }
 
-std::vector<int> GetCenter(int nPitch, unsigned char* fm)
+bool CiglimDlg::BeforeMove()
+{
+	bool bRet = true;
+	int nDistance = GetDlgItemInt(IDC_EDIT_DISTANCE);
+	if (nDistance == NULL) {
+		AfxMessageBox(_T("Fill In Distance"));
+		bRet = false;
+	}
+	return bRet;
+}
+
+std::vector<int> CiglimDlg::GetCenter(unsigned char* fm)
 {
 	std::vector<int> vPoint{};
+
+	int nPitch = m_pImg.GetPitch();
 	int nSumX = 0;
 	int nSumY = 0;
 	int nCount = 0;
@@ -303,34 +333,146 @@ std::vector<int> GetCenter(int nPitch, unsigned char* fm)
 	return vPoint;
 }
 
-void CiglimDlg::OnBnClickedBtnTopleft()
+void CiglimDlg::MoveCircle(int direction)
 {
+	if (!BeforeMove())
+		return;
+
+	unsigned char* fm = (unsigned char*)m_pImg.GetBits();
 	int nRadius = GetDlgItemInt(IDC_EDIT_RADIUS);
 	int nDistance = GetDlgItemInt(IDC_EDIT_DISTANCE);
-	if (nDistance == NULL) {
-		AfxMessageBox(_T("Fill In Distance"));
-		return;
-	}
-	
-	int nPitch = m_pImg.GetPitch();
-	unsigned char* fm = (unsigned char*)m_pImg.GetBits();
 
-	std::vector<int> vCenter = GetCenter(nPitch, fm);
+	std::vector<int> vCenter = GetCenter(fm);
 
 	int nStartX = vCenter[0] - nRadius;
 	int nStartY = vCenter[1] - nRadius;
-	
+
 	for (int i = 0; i < nDistance; i++) {
-		if (nStartX == 0 || nStartY == 0) {
-			AfxMessageBox(_T("Can't Escape From Area"));
-			break;
+		if (direction == 1)
+		{
+			if (nStartX == 0 || nStartY == 0) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX--, nStartY--, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
 		}
-		else {
-			drawCircle(fm, nStartX--, nStartY--, nRadius, 0xff);
-			drawCircle(fm, nStartX, nStartY, nRadius, 0x00);
-			CClientDC dc(this);
-			m_pImg.Draw(dc, 0, 0);
-			Sleep(10);
+		else if (direction == 2)
+		{
+			if (nStartY == 0) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX, nStartY--, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
+		}
+		else if (direction == 3)
+		{
+			if (nStartX + (nRadius * 2) == WIDTH || nStartY == 0) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX++, nStartY--, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
+		}
+		else if (direction == 4)
+		{
+			if (nStartX == 0) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX--, nStartY, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
+		}
+		else if (direction == 5)
+		{
+			if (nStartX + (nRadius * 2) == WIDTH) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX++, nStartY, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
+		}
+		else if (direction == 6)
+		{
+			if (nStartX == 0 || nStartY + (nRadius * 2) == HEIGHT) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX--, nStartY++, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
+		}
+		else if (direction == 7)
+		{
+			if (nStartY + (nRadius * 2) == HEIGHT) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX, nStartY++, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
+		}
+		else if (direction == 8)
+		{
+			if (nStartX + (nRadius * 2) == WIDTH || nStartY + (nRadius * 2) == HEIGHT) {
+				AfxMessageBox(_T("Can't Escape From Area"));
+				break;
+			}
+			DrawCircle(fm, nStartX++, nStartY++, nRadius, 0xff);
+			DrawCircle(fm, nStartX, nStartY, nRadius, 0x00);
+			UpdateImg();
 		}
 	}
+}
+
+void CiglimDlg::OnBnClickedBtnTopleft()
+{
+	MoveCircle(1);
+}
+
+void CiglimDlg::OnBnClickedBtnTop()
+{
+	MoveCircle(2);
+}
+
+
+void CiglimDlg::OnBnClickedBtnTopright()
+{
+	MoveCircle(3);
+}
+
+
+void CiglimDlg::OnBnClickedBtnLeft()
+{
+	MoveCircle(4);
+}
+
+
+void CiglimDlg::OnBnClickedBtnRight()
+{
+	MoveCircle(5);
+}
+
+
+void CiglimDlg::OnBnClickedBtnBottomleft()
+{
+	MoveCircle(6);
+}
+
+
+void CiglimDlg::OnBnClickedBtnBottom()
+{
+	MoveCircle(7);
+}
+
+
+void CiglimDlg::OnBnClickedBtnBottomright()
+{
+	MoveCircle(8);
 }
