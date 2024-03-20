@@ -512,7 +512,5 @@ void CiglimDlg::OnBnClickedBtnQuit()
 {
 	// TODO: Add your control notification handler code here
 	if (AfxMessageBox(_T("Are you sure to quit?"), MB_OKCANCEL) == IDOK)
-	{
-		PostQuitMessage(0);
-	}
+		EndDialog(IDOK);
 }

@@ -1,7 +1,10 @@
-﻿  iglimDlg.cpp
+﻿  Skipping... (no relevant changes detected)
+  stdafx.cpp
+  iglimDlg.cpp
   Generating Code...
   Skipping... (no relevant changes detected)
   iglim.cpp
+  DlgImg.cpp
 DlgImg.obj : warning LNK4258: directive '/entry:WinMainCRTStartup' not compatible with switch '/ENTRY:wWinMainCRTStartup'; ignored
 iglimDlg.obj : warning LNK4258: directive '/entry:WinMainCRTStartup' not compatible with switch '/ENTRY:wWinMainCRTStartup'; ignored
   iglim.vcxproj -> C:\Users\admin\Documents\GitHub\iglim\Debug\iglim.exe
